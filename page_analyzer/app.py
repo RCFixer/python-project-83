@@ -92,7 +92,7 @@ def add_url():
     query = f"INSERT INTO urls (name, created_at) VALUES ('{url_name}', '{date.today()}');"
     try:
         cur.execute(query)
-    except:
+    except psycopg2.Error:
         raise
     finally:
         conn.commit()
