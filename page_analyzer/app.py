@@ -16,7 +16,7 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 def connect_to_database():
-    return psycopg2.connect(DATABASE_URL + '?sslmode=disable')
+    return psycopg2.connect(DATABASE_URL)
 
 
 def normalize_url(url_name):
