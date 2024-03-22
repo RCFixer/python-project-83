@@ -4,6 +4,7 @@ import psycopg2
 from datetime import date
 from urllib.parse import urlparse
 from validators.url import url
+from bs4 import BeautifulSoup
 import requests
 
 import os
@@ -38,6 +39,19 @@ def get_response(url_name):
     except (requests.HTTPError, requests.ConnectionError):
         return None
     return response
+
+
+def get_info(response):
+    soup = BeautifulSoup(response.text, 'html.parser')
+    title = soup.find('title')
+    title = title.get_text() if title else ''
+    h1 = soup.find('h1')
+    h1 = h1.get_text() if h1 else ''
+    meta_description = soup.find('meta', attrs={"name": "description"})
+    meta_content = ''
+    if meta_description:
+        meta_content = meta_description.get('content', '')
+    return title, h1, meta_content
 
 
 def get_site(url_id):
@@ -130,8 +144,9 @@ def check_url(url_id):
     if response is None:
         flash('Произошла ошибка при проверке', 'danger')
         return redirect(url_for('get_url', url_id=url_id), code=302)
-    create_query = f"INSERT INTO url_checks (url_id, status_code, created_at) VALUES ('{url_id}'," \
-                   f" '{response.status_code}', '{date.today()}');"
+    title, h1, meta_content = get_info(response)
+    create_query = f"INSERT INTO url_checks (url_id, status_code, h1, title, description, created_at) " \
+                   f"VALUES ('{url_id}', '{response.status_code}','{h1}','{title}','{meta_content}', '{date.today()}');"
     try:
         cur.execute(create_query)
     except psycopg2.Error:
