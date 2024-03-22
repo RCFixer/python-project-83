@@ -1,4 +1,4 @@
-.PHONY: install dev lint
+.PHONY: install dev lint start build
 
 install:
 	poetry install
@@ -12,3 +12,6 @@ lint:
 PORT ?= 8000
 start:
 	poetry run gunicorn -w 5 -b 0.0.0.0:$(PORT) page_analyzer:app
+
+build:
+	./build.sh
