@@ -16,13 +16,13 @@
     </tr>
     </thead>
     <tbody>
-        {% for site in sites %}
+        {% for site, info in sites.items() %}
           <tr>
             <td>{{site[0]}}</td>
             <td>
               <a href="{{ url_for('get_url', url_id=site[0]) }}">{{site[1]}}</a>
             </td>
-            <td>{{site[2]}}</td>
+            <td>{{info[0]}}</td>
             <td>200</td>
           </tr>
         {% endfor %}

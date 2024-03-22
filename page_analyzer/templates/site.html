@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="container-lg mt-3">
-      <h1>Сайт: https://ru.hexlet.io</h1>
+      <h1>Сайт: {{ site[1] }}</h1>
 
 
   <div class="table-responsive">
@@ -25,7 +25,7 @@
   </div>
 
     <h2 class="mt-5 mb-3">Проверки</h2>
-    <form method="post" action="/urls/1/checks">
+    <form method="post" action="{{ url_for('check_url', url_id=site[0]) }}">
     <input type="submit" class="btn btn-primary" value="Запустить проверку">
     </form>
 
@@ -42,7 +42,16 @@
       </tr>
     </thead>
       <tbody>
-
+      {% for check in checks %}
+        <tr>
+            <td>{{ check[0] }}</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>{{ check[6] }}</td>
+        </tr>
+      {% endfor %}
     </tbody>
     </table>
   </div>

@@ -51,10 +51,17 @@ def urls_list():
     cur = conn.cursor()
     cur.execute("SELECT * FROM urls ORDER BY id DESC;")
     rows = cur.fetchall()
-    cur.close()
-    sites = []
+    sites = {}
     for row in rows:
-        sites.append(row)
+        query = f"""SELECT url_checks.created_at, url_checks.status_code FROM url_checks
+                   INNER JOIN urls on urls.id=url_checks.url_id
+                   WHERE url_checks.url_id={row[0]}
+                   ORDER BY url_checks.url_id DESC
+                   LIMIT 1;"""
+        cur.execute(query)
+        info = cur.fetchone()
+        sites[row] = info if info else ('', '')
+    cur.close()
     messages = get_flashed_messages(with_categories=True)
     return render_template(
         'urls.html',
@@ -67,12 +74,17 @@ def urls_list():
 def get_url(url_id):
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM urls WHERE id={url_id};")
-    row = cur.fetchall()
+    site_info = cur.fetchall()
+    cur.execute(f"SELECT * FROM url_checks WHERE url_id={url_id} ORDER BY id DESC;")
+    rows_check = cur.fetchall()
+    last_check = rows_check[0][6]
     cur.close()
     messages = get_flashed_messages(with_categories=True)
     return render_template(
         'site.html',
-        site=row[0],
+        site=site_info[0],
+        checks=rows_check,
+        last_check=last_check,
         messages=messages
     )
 
@@ -99,6 +111,23 @@ def add_url():
         cur.close()
     flash('Страница успешно добавлена', 'success')
     return redirect(url_for('urls_list'), code=302)
+
+
+@app.post('/urls/<int:url_id>/checks')
+def check_url(url_id):
+    cur = conn.cursor()
+    create_query = f"INSERT INTO url_checks (url_id, created_at) VALUES ('{url_id}', '{date.today()}');"
+    # update_query = f"UPDATE urls SET created_at='{date.today()}' WHERE id='{url_id}';"
+    try:
+        cur.execute(create_query)
+        # cur.execute(update_query)
+    except psycopg2.Error:
+        raise
+    finally:
+        conn.commit()
+        cur.close()
+    flash('Страница успешно проверена', 'success')
+    return redirect(url_for('get_url', url_id=url_id), code=302)
 
 
 if __name__ == '__main__':
