@@ -4,6 +4,7 @@ import psycopg2
 from datetime import date
 from urllib.parse import urlparse, urlunparse
 from validators.url import url
+import requests
 
 import os
 
@@ -15,15 +16,8 @@ conn = psycopg2.connect(DATABASE_URL + '?sslmode=disable')
 
 
 def normalize_url(url_name):
-    # Парсим URL
     parsed_url = urlparse(url_name)
-
-    # Если схема (протокол) не указана, добавляем http
-    if not parsed_url.scheme:
-        parsed_url = parsed_url._replace(scheme='http')
-
-    # Нормализуем URL
-    normalized_url = urlunparse(parsed_url)
+    normalized_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
 
     return normalized_url
 
@@ -35,6 +29,23 @@ def is_duplicate(url_name):
     cur.close()
     if row:
         return row[0][0]
+
+
+def get_response(url_name):
+    try:
+        response = requests.get(url_name, timeout=1)
+        response.raise_for_status()
+    except (requests.HTTPError, requests.ConnectionError):
+        return None
+    return response
+
+
+def get_site(url_id):
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM urls WHERE id={url_id};")
+    site_info = cur.fetchone()
+    cur.close()
+    return site_info
 
 
 @app.route('/')
@@ -56,7 +67,7 @@ def urls_list():
         query = f"""SELECT url_checks.created_at, url_checks.status_code FROM url_checks
                    INNER JOIN urls on urls.id=url_checks.url_id
                    WHERE url_checks.url_id={row[0]}
-                   ORDER BY url_checks.url_id DESC
+                   ORDER BY url_checks.id DESC
                    LIMIT 1;"""
         cur.execute(query)
         info = cur.fetchone()
@@ -77,14 +88,12 @@ def get_url(url_id):
     site_info = cur.fetchall()
     cur.execute(f"SELECT * FROM url_checks WHERE url_id={url_id} ORDER BY id DESC;")
     rows_check = cur.fetchall()
-    last_check = rows_check[0][6]
     cur.close()
     messages = get_flashed_messages(with_categories=True)
     return render_template(
         'site.html',
         site=site_info[0],
         checks=rows_check,
-        last_check=last_check,
         messages=messages
     )
 
@@ -116,11 +125,15 @@ def add_url():
 @app.post('/urls/<int:url_id>/checks')
 def check_url(url_id):
     cur = conn.cursor()
-    create_query = f"INSERT INTO url_checks (url_id, created_at) VALUES ('{url_id}', '{date.today()}');"
-    # update_query = f"UPDATE urls SET created_at='{date.today()}' WHERE id='{url_id}';"
+    site_info = get_site(url_id)
+    response = get_response(site_info[1])
+    if response is None:
+        flash('Произошла ошибка при проверке', 'danger')
+        return redirect(url_for('get_url', url_id=url_id), code=302)
+    create_query = f"INSERT INTO url_checks (url_id, status_code, created_at) VALUES ('{url_id}'," \
+                   f" '{response.status_code}', '{date.today()}');"
     try:
         cur.execute(create_query)
-        # cur.execute(update_query)
     except psycopg2.Error:
         raise
     finally:
