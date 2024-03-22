@@ -13,7 +13,10 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 DATABASE_URL = os.getenv('DATABASE_URL')
-conn = psycopg2.connect(DATABASE_URL + '?sslmode=disable')
+
+
+def connect_to_database():
+    return psycopg2.connect(DATABASE_URL + '?sslmode=disable')
 
 
 def normalize_url(url_name):
@@ -24,6 +27,7 @@ def normalize_url(url_name):
 
 
 def is_duplicate(url_name):
+    conn = connect_to_database()
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM urls WHERE name='{url_name}';")
     row = cur.fetchall()
@@ -55,6 +59,7 @@ def get_info(response):
 
 
 def get_site(url_id):
+    conn = connect_to_database()
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM urls WHERE id={url_id};")
     site_info = cur.fetchone()
@@ -73,6 +78,7 @@ def main():
 
 @app.route('/urls')
 def urls_list():
+    conn = connect_to_database()
     cur = conn.cursor()
     cur.execute("SELECT * FROM urls ORDER BY id DESC;")
     rows = cur.fetchall()
@@ -97,6 +103,7 @@ def urls_list():
 
 @app.route('/urls/<int:url_id>')
 def get_url(url_id):
+    conn = connect_to_database()
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM urls WHERE id={url_id};")
     site_info = cur.fetchall()
@@ -114,6 +121,7 @@ def get_url(url_id):
 
 @app.post('/urls')
 def add_url():
+    conn = connect_to_database()
     url_name = request.form.get('url', '')
     if not url(url_name) or len(url_name) > 255:
         flash('Некорректный URL', 'danger')
@@ -138,6 +146,7 @@ def add_url():
 
 @app.post('/urls/<int:url_id>/checks')
 def check_url(url_id):
+    conn = connect_to_database()
     cur = conn.cursor()
     site_info = get_site(url_id)
     response = get_response(site_info[1])
