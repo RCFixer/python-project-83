@@ -12,8 +12,3 @@ CREATE TABLE url_checks (
     description text,
     created_at timestamp
 );
-
-SELECT url_checks.created_at, url_checks.status_code FROM url_checks
-INNER JOIN urls on urls.id=url_checks.url_id
-ORDER BY url_checks.url_id DESC
-LIMIT 1;
