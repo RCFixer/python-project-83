@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, flash, get_flashed_
 from dotenv import load_dotenv
 import psycopg2
 from datetime import date
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 from validators.url import url
 import requests
 
