@@ -14,9 +14,9 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 conn = psycopg2.connect(DATABASE_URL)
 
 
-def normalize_url(url):
+def normalize_url(url_name):
     # Парсим URL
-    parsed_url = urlparse(url)
+    parsed_url = urlparse(url_name)
 
     # Если схема (протокол) не указана, добавляем http
     if not parsed_url.scheme:
@@ -80,7 +80,7 @@ def get_url(url_id):
 @app.post('/urls')
 def add_url():
     url_name = request.form.get('url', '')
-    if not url(url_name):
+    if not url(url_name) or len(url_name) > 255:
         flash('Некорректный URL', 'danger')
         return redirect(url_for('main'), code=302)
     url_name = normalize_url(url_name)
