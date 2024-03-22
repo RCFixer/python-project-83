@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container-lg mt-3">
+      <h1>Сайты</h1>
+
+
+<div class="table-responsive">
+  <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Имя</th>
+      <th>Последняя проверка</th>
+      <th>Код ответа</th>
+    </tr>
+    </thead>
+    <tbody>
+        {% for site in sites %}
+          <tr>
+            <td>{{site[0]}}</td>
+            <td>
+              <a href="{{ url_for('get_url', url_id=site[0]) }}">{{site[1]}}</a>
+            </td>
+            <td>{{site[2]}}</td>
+            <td>200</td>
+          </tr>
+        {% endfor %}
+    </tbody>
+    <tbody>
+
+    </tbody>
+  </table>
+</div>
+
+    </div>
+{% endblock %}
