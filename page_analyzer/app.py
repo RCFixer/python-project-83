@@ -38,7 +38,7 @@ def is_duplicate(url_name):
 
 def get_response(url_name):
     try:
-        response = requests.get(url_name, timeout=1)
+        response = requests.get(url_name)
         response.raise_for_status()
     except (requests.HTTPError, requests.ConnectionError):
         return None
@@ -125,12 +125,12 @@ def add_url():
     url_name = request.form.get('url', '')
     if not url(url_name) or len(url_name) > 255:
         flash('Некорректный URL', 'danger')
-        return redirect(url_for('main'), code=302)
+        return redirect(url_for('main'), code=422)
     url_name = normalize_url(url_name)
     url_id = is_duplicate(url_name)
     if url_id:
         flash('Страница уже существует', 'info')
-        return redirect(url_for('get_url', url_id=url_id), code=302)
+        return redirect(url_for('get_url', url_id=url_id))
     cur = conn.cursor()
     query = f"INSERT INTO urls (name, created_at) VALUES ('{url_name}', '{date.today()}');"
     try:
@@ -141,7 +141,7 @@ def add_url():
         conn.commit()
         cur.close()
     flash('Страница успешно добавлена', 'success')
-    return redirect(url_for('urls_list'), code=302)
+    return redirect(url_for('urls_list'))
 
 
 @app.post('/urls/<int:url_id>/checks')
@@ -152,7 +152,7 @@ def check_url(url_id):
     response = get_response(site_info[1])
     if response is None:
         flash('Произошла ошибка при проверке', 'danger')
-        return redirect(url_for('get_url', url_id=url_id), code=302)
+        return redirect(url_for('get_url', url_id=url_id))
     title, h1, meta_content = get_info(response)
     create_query = f"INSERT INTO url_checks (url_id, status_code, h1, title, description, created_at) " \
                    f"VALUES ('{url_id}', '{response.status_code}','{h1}','{title}','{meta_content}', '{date.today()}');"
@@ -164,7 +164,7 @@ def check_url(url_id):
         conn.commit()
         cur.close()
     flash('Страница успешно проверена', 'success')
-    return redirect(url_for('get_url', url_id=url_id), code=302)
+    return redirect(url_for('get_url', url_id=url_id))
 
 
 if __name__ == '__main__':
