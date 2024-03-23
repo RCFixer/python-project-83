@@ -40,7 +40,7 @@ def get_response(url_name):
     try:
         response = requests.get(url_name)
         response.raise_for_status()
-    except (requests.HTTPError, requests.ConnectionError):
+    except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError, requests.exceptions.RequestException):
         return None
     return response
 
