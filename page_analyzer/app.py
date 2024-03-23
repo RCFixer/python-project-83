@@ -69,10 +69,8 @@ def get_site(url_id):
 
 @app.route('/')
 def main():
-    messages = get_flashed_messages(with_categories=True)
     return render_template(
         'index.html',
-        messages=messages
     )
 
 
@@ -93,11 +91,9 @@ def urls_list():
         info = cur.fetchone()
         sites[row] = info if info else ('', '')
     cur.close()
-    messages = get_flashed_messages(with_categories=True)
     return render_template(
         'urls.html',
         sites=sites,
-        messages=messages
     )
 
 
@@ -110,12 +106,10 @@ def get_url(url_id):
     cur.execute(f"SELECT * FROM url_checks WHERE url_id={url_id} ORDER BY id DESC;")
     rows_check = cur.fetchall()
     cur.close()
-    messages = get_flashed_messages(with_categories=True)
     return render_template(
         'site.html',
         site=site_info[0],
         checks=rows_check,
-        messages=messages
     )
 
 
@@ -125,7 +119,7 @@ def add_url():
     url_name = request.form.get('url', '')
     if not url(url_name) or len(url_name) > 255:
         flash('Некорректный URL', 'danger')
-        return redirect(url_for('main'))
+        return render_template('index.html'), 422
     url_name = normalize_url(url_name)
     url_id = is_duplicate(url_name)
     if url_id:
