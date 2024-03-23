@@ -38,7 +38,7 @@ def is_duplicate(url_name):
 
 def get_response(url_name):
     try:
-        response = requests.get(url_name)
+        response = requests.get(url_name, timeout=1)
         response.raise_for_status()
     except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError, requests.exceptions.RequestException):
         return None
@@ -139,9 +139,11 @@ def add_url():
         raise
     finally:
         conn.commit()
-        cur.close()
+    cur.execute(f"SELECT id FROM urls WHERE name='{url_name}';")
+    url_id = cur.fetchone()[0]
+    cur.close()
     flash('Страница успешно добавлена', 'success')
-    return redirect(url_for('urls_list'))
+    return redirect(url_for('get_url', url_id=url_id))
 
 
 @app.post('/urls/<int:url_id>/checks')
