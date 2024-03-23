@@ -125,7 +125,7 @@ def add_url():
     url_name = request.form.get('url', '')
     if not url(url_name) or len(url_name) > 255:
         flash('Некорректный URL', 'danger')
-        return redirect(url_for('main'), code=422)
+        return redirect(url_for('main'))
     url_name = normalize_url(url_name)
     url_id = is_duplicate(url_name)
     if url_id:
