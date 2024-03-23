@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash, get_flashed_messages, url_for
+from flask import Flask, render_template, request, redirect, flash, url_for
 from dotenv import load_dotenv
 import psycopg2
 from datetime import date
